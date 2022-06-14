@@ -13,6 +13,6 @@ if [ `id -u` != 0 ]; then
 fi
 
 # Wipes old project and runner script
-echo "[*] Wiping old project and recreating directory" &&
+echo "[*] Cleaning up" &&
 rm -rf $PROJECT_PATH &&
-rm -f $RUNNER_PATH &&
+rm -f $RUNNER_PATH
