@@ -136,6 +136,7 @@ def main(args):
             machine = result.machines[0]
             result = client.start(machine)
             if result == 0:
+                start_time = time.perf_counter()
                 print(f"Started instance: {machine.name}")
                 print("The machine takes time to start up completely")
                 print("Please wait...")
@@ -149,6 +150,9 @@ def main(args):
                         pass
                     else:
                         if address is not None:
+                            end_time = time.perf_counter()
+                            elapsed = round(end_time - start_time, 2)
+                            print(f"Elapsed time: {elapsed} seconds")
                             print(f"Finished: {address}")
                             break
                 else:
@@ -179,6 +183,7 @@ def main(args):
             print("The machine is currently busy with another operation")
         else:
             if machine is not None:
+                start_time = time.perf_counter()
                 print(f"Stopped: {machine}")
                 print("The machine takes time to stop completely")
                 print("Please wait...")
@@ -188,6 +193,9 @@ def main(args):
                     time.sleep(1)
                     address = client.target()
                     if address is None:
+                        end_time = time.perf_counter()
+                        elapsed = round(end_time - start_time, 2)
+                        print(f"Elapsed time: {elapsed} seconds")
                         print(f"Finished: {machine} was stopped")
                         break
                 else:
@@ -201,6 +209,7 @@ def main(args):
             print("The machine is currently busy with another operation")
         else:
             if machine is not None:
+                start_time = time.perf_counter()
                 print(f"Resetting: {machine}")
                 print("The machine takes time to start up completely")
                 print("Please wait...")
@@ -214,6 +223,9 @@ def main(args):
                         pass
                     else:
                         if address is not None:
+                            end_time = time.perf_counter()
+                            elapsed = round(end_time - start_time, 2)
+                            print(f"Elapsed time: {elapsed} seconds")
                             print(f"Finished: {address}")
                             break
                 else:
