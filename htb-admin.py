@@ -1,6 +1,7 @@
 """Module for utilizing the HackTheBox API for machine management"""
 import os
 import sys
+import time
 
 from hackthebox import HTBClient
 import netifaces as ni
@@ -26,12 +27,6 @@ class Client:
     def __init__(self, token_path):
         token = self.get_token(token_path)
         self.client = HTBClient(app_token=token)
-        self.instance = None
-        self.machine = None
-
-    # @property
-    # def instance(self):
-    #     return self.client.get_active_machine()
 
     def search(self, query):
         """Searches HackTheBox API for machine given a search query"""
@@ -45,6 +40,13 @@ class Client:
             machine.spawn()
         except KeyError:
             pass
+        except Exception as error:
+            if "You must stop your active machine" in str(error):
+                return 1
+            else:
+                raise error
+        
+        return 0
 
     def info(self):
         """Gets currently active machine information"""
@@ -132,33 +134,92 @@ def main(args):
         result = client.search(args.start)
         if len(result.machines) == 1:
             machine = result.machines[0]
-            client.start(machine)
-            print(f"Started instance: {machine.name}")
+            result = client.start(machine)
+            if result == 0:
+                print(f"Started instance: {machine.name}")
+                print("The machine takes time to start up completely")
+                print("Please wait...")
+                total = 300
+                address = None
+                for second in range(total):
+                    time.sleep(1)
+                    try:
+                        address = client.target()
+                    except StopIteration:
+                        pass
+                    else:
+                        if address is not None:
+                            print(f"Finished: {address}")
+                            break
+                else:
+                    print(f"There was a problem starting: {machine}")
+            elif result == 1:
+                print("There is a machine that is already active")
         elif len(result.machines) > 1:
             print("Cannot start multiple machines at once")
             print("Be more specific with your machine query")
         else:
             print(f"Could not find machine to start: {args.start}")
     elif args.info:
-        machine = client.info()
-        if machine is not None:
-            print(f"Machine Name: {machine.machine.name}")
-            print(f"Machine ID:   {machine.machine.id}")
-            print(f"Machine IP:   {machine.ip}")
+        try:
+            machine = client.info()
+        except StopIteration:
+            print("The machine is currently busy with another operation")
         else:
-            print("No active machine available")
+            if machine is not None:
+                print(f"Machine Name: {machine.machine.name}")
+                print(f"Machine ID:   {machine.machine.id}")
+                print(f"Machine IP:   {machine.ip}")
+            else:
+                print("No active machine available")
     elif args.kill:
-        machine = client.stop()
-        if machine is not None:
-            print(f"Stopped: {machine}")
+        try:
+            machine = client.stop()
+        except StopIteration:
+            print("The machine is currently busy with another operation")
         else:
-            print("No active machine available to stop")
+            if machine is not None:
+                print(f"Stopped: {machine}")
+                print("The machine takes time to stop completely")
+                print("Please wait...")
+                total = 60
+                address = None
+                for second in range(total):
+                    time.sleep(1)
+                    address = client.target()
+                    if address is None:
+                        print(f"Finished: {machine} was stopped")
+                        break
+                else:
+                    print(f"There was a problem stopping: {machine}")
+            else:
+                print("No active machine available to stop")
     elif args.reset:
-        machine = client.reset()
-        if machine is not None:
-            print(f"Resetting: {machine}")
+        try:
+            machine = client.reset()
+        except StopIteration:
+            print("The machine is currently busy with another operation")
         else:
-            print("No active machine available to reset")
+            if machine is not None:
+                print(f"Resetting: {machine}")
+                print("The machine takes time to start up completely")
+                print("Please wait...")
+                total = 300
+                address = None
+                for second in range(total):
+                    time.sleep(1)
+                    try:
+                        address = client.target()
+                    except StopIteration:
+                        pass
+                    else:
+                        if address is not None:
+                            print(f"Finished: {address}")
+                            break
+                else:
+                    print(f"There was a problem resetting: {machine}")
+            else:
+                print("No active machine available to reset")
     elif args.flag:
         flag_parts = args.flag.split(":")
         if len(flag_parts) == 2:
@@ -191,11 +252,15 @@ def main(args):
         else:
             print("Interface tun0 is not up, connect to VPN first")
     elif args.target:
-        address = client.target()
-        if address is not None:
-            print(address)
+        try:
+            address = client.target()
+        except StopIteration:
+            print("The machine is currently busy with another operation")
         else:
-            print("No active machine available to check target IP for")
+            if address is not None:
+                print(address)
+            else:
+                print("No active machine available to check target IP for")
 
 
 if __name__ == "__main__":
