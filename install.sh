@@ -11,12 +11,18 @@ VENV_PYTHON=${VENV_PATH}/bin/python
 VENV_ACTIVATE=${VENV_PATH}/bin/activate
 
 # Current Path Constants
-CURRENT_PATH=`pwd -P`
+CURRENT_DIR_PATH=`pwd -P`
+CURRENT_REL_PATH=`echo $0 | sed "s/\/install.sh//"`
+CURRENT_PATH=${CURRENT_DIR_PATH}/${CURRENT_REL_PATH}
 CURRENT_ENTRY=${CURRENT_PATH}/htb-admin.py
 CURRENT_REQUIREMENTS=${CURRENT_PATH}/requirements.txt
 
 # Runner Script Path Constant
 RUNNER_PATH=/usr/local/bin/htb-admin
+
+echo $CURRENT_ENTRY
+echo $CURRENT_REQUIREMENTS
+exit
 
 # Checks if user is root when running install
 if [ `id -u` != 0 ]; then
@@ -48,11 +54,7 @@ cp $CURRENT_REQUIREMENTS $PROJECT_PATH &&
 # Creating the runner script in a local system path
 rm -f $RUNNER_PATH
 echo '#!/bin/bash' > $RUNNER_PATH
-echo 'PROJECT_PATH=/opt/HTB-Admin' >> $RUNNER_PATH
-echo 'VENV_PATH=${PROJECT_PATH}/venv' >> $RUNNER_PATH
-echo 'VENV_PYTHON=${VENV_PATH}/bin/python' >> $RUNNER_PATH
-echo 'PROJECT_ENTRY=${PROJECT_PATH}/htb-admin.py' >> $RUNNER_PATH
-echo '$VENV_PYTHON $PROJECT_ENTRY $@' >> $RUNNER_PATH
+echo "$VENV_PYTHON $PROJECT_ENTRY \$@" >> $RUNNER_PATH
 
 # Lock down the project permissions and ownership
 echo "[*] Locking down the project permissions and ownership" &&
