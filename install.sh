@@ -11,9 +11,7 @@ VENV_PYTHON=${VENV_PATH}/bin/python
 VENV_ACTIVATE=${VENV_PATH}/bin/activate
 
 # Current Path Constants
-CURRENT_DIR_PATH=`pwd -P`
-CURRENT_REL_PATH=`echo $0 | sed "s/\/install.sh//"`
-CURRENT_PATH=${CURRENT_DIR_PATH}/${CURRENT_REL_PATH}
+CURRENT_PATH=`pwd -P`
 CURRENT_ENTRY=${CURRENT_PATH}/htb-admin.py
 CURRENT_REQUIREMENTS=${CURRENT_PATH}/requirements.txt
 
