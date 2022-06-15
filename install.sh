@@ -20,10 +20,6 @@ CURRENT_REQUIREMENTS=${CURRENT_PATH}/requirements.txt
 # Runner Script Path Constant
 RUNNER_PATH=/usr/local/bin/htb-admin
 
-echo $CURRENT_ENTRY
-echo $CURRENT_REQUIREMENTS
-exit
-
 # Checks if user is root when running install
 if [ `id -u` != 0 ]; then
     echo "[!] Must be run as root" >&2
