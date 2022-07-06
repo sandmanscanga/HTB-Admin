@@ -48,8 +48,8 @@ class Client:
         
         return 0
 
-    def info(self):
-        """Gets currently active machine information"""
+    def description(self):
+        """Gets currently active machine description"""
 
         return self.client.get_active_machine()
 
@@ -126,8 +126,16 @@ def main(args):
             machine = result.machines[0]
             print(f"{machine.name} -> {machine.id}")
         elif len(result.machines) > 1:
-            for machine in result.machines:
-                print(f"{machine.name} -> {machine.id}")
+            if args.id:
+                for machine in result.machines:
+                    if args.id == machine.id:
+                        print(f"{machine.name} -> {machine.id}")
+                        break
+                else:
+                    raise Exception(f"Multiple machines found, ID not found for: {args.query}, {args.id}")
+            else:
+                for machine in result.machines:
+                    print(f"{machine.name} -> {machine.id}")
         else:
             raise Exception(f"No machines found for query: {args.query}")
     elif args.start:
@@ -160,13 +168,42 @@ def main(args):
             elif result == 1:
                 print("There is a machine that is already active")
         elif len(result.machines) > 1:
-            print("Cannot start multiple machines at once")
-            print("Be more specific with your machine query")
+            if args.id:
+                for machine in result.machines:
+                    if machine.id  == args.id:
+                        result = client.start(machine)
+                        if result == 0:
+                            start_time = time.perf_counter()
+                            print(f"Started instance: {machine.name}")
+                            print("The machine takes time to start up completely")
+                            print("Please wait...")
+                            total = 300
+                            address = None
+                            for second in range(total):
+                                time.sleep(1)
+                                try:
+                                    address = client.target()
+                                except StopIteration:
+                                    pass
+                                else:
+                                    if address is not None:
+                                        end_time = time.perf_counter()
+                                        elapsed = round(end_time - start_time, 2)
+                                        print(f"Elapsed time: {elapsed} seconds")
+                                        print(f"Finished: {address}")
+                                        break
+                            else:
+                                print(f"There was a problem starting: {machine}")
+                        elif result == 1:
+                            print("There is a machine that is already active")
+            else:
+                print("Cannot start multiple machines at once")
+                print("Be more specific with your machine query")
         else:
             print(f"Could not find machine to start: {args.start}")
-    elif args.info:
+    elif args.description:
         try:
-            machine = client.info()
+            machine = client.description()
         except StopIteration:
             print("The machine is currently busy with another operation")
         else:
@@ -286,6 +323,11 @@ if __name__ == "__main__":
         default="/etc/hackthebox/api-token.txt",
         help="specify path to the HackTheBox app token file path"
     )
+    parser.add_argument(
+        "-i", "--id",
+        dest="id", type=int,
+        help="specify machine id"
+    )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "-q", "--query",
@@ -298,9 +340,9 @@ if __name__ == "__main__":
         help="specify machine name to start/spawn"
     )
     group.add_argument(
-        "-i", "--info",
+        "-d", "--description",
         action="store_true",
-        help="specify info flag to get active machine info"
+        help="specify description flag to get active machine description"
     )
     group.add_argument(
         "-k", "--kill",
@@ -329,3 +371,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     main(args)
+    # client = Client(args.token_path)
