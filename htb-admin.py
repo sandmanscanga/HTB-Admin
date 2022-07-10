@@ -121,12 +121,15 @@ class Client:
 def main(args):
     client = Client(args.token_path)
     if args.query:
-        result = client.search(args.query)
-        if len(result.machines) == 1:
-            machine = result.machines[0]
+        if args.id:
+            machine = client.client.get_machine(args.id)
             print(f"{machine.name} -> {machine.id}")
-        elif len(result.machines) > 1:
-            if args.id:
+        else:
+            result = client.search(args.query)
+            if len(result.machines) == 1:
+                machine = result.machines[0]
+                print(f"{machine.name} -> {machine.id}")
+            elif len(result.machines) > 1:
                 for machine in result.machines:
                     if args.id == machine.id:
                         print(f"{machine.name} -> {machine.id}")
@@ -134,14 +137,10 @@ def main(args):
                 else:
                     raise Exception(f"Multiple machines found, ID not found for: {args.query}, {args.id}")
             else:
-                for machine in result.machines:
-                    print(f"{machine.name} -> {machine.id}")
-        else:
-            raise Exception(f"No machines found for query: {args.query}")
+                raise Exception(f"No machines found for query: {args.query}")
     elif args.start:
-        result = client.search(args.start)
-        if len(result.machines) == 1:
-            machine = result.machines[0]
+        if args.id:
+            machine = client.client.get_machine(args.id)
             result = client.start(machine)
             if result == 0:
                 start_time = time.perf_counter()
@@ -167,40 +166,69 @@ def main(args):
                     print(f"There was a problem starting: {machine}")
             elif result == 1:
                 print("There is a machine that is already active")
-        elif len(result.machines) > 1:
-            if args.id:
-                for machine in result.machines:
-                    if machine.id  == args.id:
-                        result = client.start(machine)
-                        if result == 0:
-                            start_time = time.perf_counter()
-                            print(f"Started instance: {machine.name}")
-                            print("The machine takes time to start up completely")
-                            print("Please wait...")
-                            total = 300
-                            address = None
-                            for second in range(total):
-                                time.sleep(1)
-                                try:
-                                    address = client.target()
-                                except StopIteration:
-                                    pass
-                                else:
-                                    if address is not None:
-                                        end_time = time.perf_counter()
-                                        elapsed = round(end_time - start_time, 2)
-                                        print(f"Elapsed time: {elapsed} seconds")
-                                        print(f"Finished: {address}")
-                                        break
-                            else:
-                                print(f"There was a problem starting: {machine}")
-                        elif result == 1:
-                            print("There is a machine that is already active")
-            else:
-                print("Cannot start multiple machines at once")
-                print("Be more specific with your machine query")
         else:
-            print(f"Could not find machine to start: {args.start}")
+            result = client.search(args.start)
+            if len(result.machines) == 1:
+                machine = result.machines[0]
+                result = client.start(machine)
+                if result == 0:
+                    start_time = time.perf_counter()
+                    print(f"Started instance: {machine.name}")
+                    print("The machine takes time to start up completely")
+                    print("Please wait...")
+                    total = 300
+                    address = None
+                    for second in range(total):
+                        time.sleep(1)
+                        try:
+                            address = client.target()
+                        except StopIteration:
+                            pass
+                        else:
+                            if address is not None:
+                                end_time = time.perf_counter()
+                                elapsed = round(end_time - start_time, 2)
+                                print(f"Elapsed time: {elapsed} seconds")
+                                print(f"Finished: {address}")
+                                break
+                    else:
+                        print(f"There was a problem starting: {machine}")
+                elif result == 1:
+                    print("There is a machine that is already active")
+            elif len(result.machines) > 1:
+                if args.id:
+                    for machine in result.machines:
+                        if machine.id  == args.id:
+                            result = client.start(machine)
+                            if result == 0:
+                                start_time = time.perf_counter()
+                                print(f"Started instance: {machine.name}")
+                                print("The machine takes time to start up completely")
+                                print("Please wait...")
+                                total = 300
+                                address = None
+                                for second in range(total):
+                                    time.sleep(1)
+                                    try:
+                                        address = client.target()
+                                    except StopIteration:
+                                        pass
+                                    else:
+                                        if address is not None:
+                                            end_time = time.perf_counter()
+                                            elapsed = round(end_time - start_time, 2)
+                                            print(f"Elapsed time: {elapsed} seconds")
+                                            print(f"Finished: {address}")
+                                            break
+                                else:
+                                    print(f"There was a problem starting: {machine}")
+                            elif result == 1:
+                                print("There is a machine that is already active")
+                else:
+                    print("Cannot start multiple machines at once")
+                    print("Be more specific with your machine query")
+            else:
+                print(f"Could not find machine to start: {args.start}")
     elif args.description:
         try:
             machine = client.description()
