@@ -28,10 +28,16 @@ class Client:
         token = self.get_token(token_path)
         self.client = HTBClient(app_token=token)
 
-    def search(self, query):
-        """Searches HackTheBox API for machine given a search query"""
+    def search(self, query, retired=True):
+        """Alternatively searches HackTheBox API for machine given a search query"""
 
-        return self.client.search(query)
+        machines = []
+        _machines = self.client.get_machines(retired=retired)
+        for machine in _machines:
+            if query.lower() in machine.name.lower():
+                machines.append(machine)
+
+        return machines
 
     def start(self, machine):
         """Starts an instance of the machine given a machine name"""
@@ -125,17 +131,13 @@ def main(args):
             machine = client.client.get_machine(args.id)
             print(f"{machine.name} -> {machine.id}")
         else:
-            result = client.search(args.query)
-            if len(result.machines) == 1:
-                machine = result.machines[0]
+            machines = client.search(args.query, args.active)
+            if len(machines) == 1:
+                machine = machines[0]
                 print(f"{machine.name} -> {machine.id}")
-            elif len(result.machines) > 1:
-                for machine in result.machines:
-                    if args.id == machine.id:
-                        print(f"{machine.name} -> {machine.id}")
-                        break
-                else:
-                    raise Exception(f"Multiple machines found, ID not found for: {args.query}, {args.id}")
+            elif len(machines) > 1:
+                for machine in machines:
+                    print(f"{machine.name} -> {machine.id}")
             else:
                 raise Exception(f"No machines found for query: {args.query}")
     elif args.start:
@@ -167,9 +169,9 @@ def main(args):
             elif result == 1:
                 print("There is a machine that is already active")
         else:
-            result = client.search(args.start)
-            if len(result.machines) == 1:
-                machine = result.machines[0]
+            machines = client.search(args.start, args.active)
+            if len(machines) == 1:
+                machine = machines[0]
                 result = client.start(machine)
                 if result == 0:
                     start_time = time.perf_counter()
@@ -195,9 +197,9 @@ def main(args):
                         print(f"There was a problem starting: {machine}")
                 elif result == 1:
                     print("There is a machine that is already active")
-            elif len(result.machines) > 1:
+            elif len(machines) > 1:
                 if args.id:
-                    for machine in result.machines:
+                    for machine in machines:
                         if machine.id  == args.id:
                             result = client.start(machine)
                             if result == 0:
@@ -356,6 +358,11 @@ if __name__ == "__main__":
         dest="id", type=int,
         help="specify machine id"
     )
+    parser.add_argument(
+        "--active",
+        action="store_false",
+        help="specify active flag if looking for active machines"
+    )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "-q", "--query",
@@ -399,4 +406,3 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     main(args)
-    # client = Client(args.token_path)
