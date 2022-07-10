@@ -47,7 +47,10 @@ sudo bash install.sh
 
 # Portable Install
 python htb-admin.py -q backdoor         # search for a machine called 'backdoor'
+python htb-admin.py -q backdoor -i 123  # search for a machine called 'backdoor' with ID '123'
 python htb-admin.py -s backdoor         # start a machine called 'backdoor'
+python htb-admin.py -s backdoor -i 123  # start a machine called 'backdoor' with ID '123'
+python htb-admin.py -d                  # get the current active machine information
 python htb-admin.py -r                  # reset the current active machine
 python htb-admin.py -k                  # kill the current active machine
 python htb-admin.py -f flag:difficulty  # submit a flag to current active machine
@@ -58,7 +61,10 @@ python htb-admin.py -l                  # return the local tun0 ip address for H
 
 # Full Install
 htb-admin -q backdoor         # search for a machine called 'backdoor'
+htb-admin -q backdoor -i 123  # search for a machine called 'backdoor' with ID '123'
 htb-admin -s backdoor         # start a machine called 'backdoor'
+htb-admin -s backdoor -i 123  # start a machine called 'backdoor' with ID '123'
+htb-admin -d                  # get the current active machine information
 htb-admin -r                  # reset the current active machine
 htb-admin -k                  # kill the current active machine
 htb-admin -f flag:difficulty  # submit a flag to current active machine
