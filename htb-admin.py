@@ -3,6 +3,7 @@ import os
 import sys
 import time
 
+import tabulate
 from hackthebox import HTBClient
 import netifaces as ni
 
@@ -129,15 +130,29 @@ def main(args):
     if args.query:
         if args.id:
             machine = client.client.get_machine(args.id)
-            print(f"{machine.name} -> {machine.id}")
+            output = [
+                ["Difficulty", machine.difficulty],
+                ["Name", machine.name],
+                ["ID", machine.id]
+            ]
+            print(tabulate.tabulate(output, tablefmt="psql"))
         else:
             machines = client.search(args.query, args.active)
             if len(machines) == 1:
                 machine = machines[0]
-                print(f"{machine.name} -> {machine.id}")
+                output = [
+                    ["Difficulty", machine.difficulty],
+                    ["Name", machine.name],
+                    ["ID", machine.id]
+                ]
+                print(tabulate.tabulate(output, tablefmt="psql"))
             elif len(machines) > 1:
                 for machine in machines:
-                    print(f"{machine.name} -> {machine.id}")
+                    output = []
+                    output.append(["Difficulty", machine.difficulty])
+                    output.append(["Name", machine.name])
+                    output.append(["ID", machine.id])
+                    print(tabulate.tabulate(output, tablefmt="psql"))
             else:
                 raise Exception(f"No machines found for query: {args.query}")
     elif args.start:
@@ -238,9 +253,13 @@ def main(args):
             print("The machine is currently busy with another operation")
         else:
             if machine is not None:
-                print(f"Machine Name: {machine.machine.name}")
-                print(f"Machine ID:   {machine.machine.id}")
-                print(f"Machine IP:   {machine.ip}")
+                output = [
+                    ["Difficulty", machine.machine.difficulty],
+                    ["Name", machine.machine.name],
+                    ["ID", machine.machine.id],
+                    ["IP", machine.machine.ip]
+                ]
+                print(tabulate.tabulate(output, tablefmt="psql"))
             else:
                 print("No active machine available")
     elif args.kill:
@@ -343,6 +362,7 @@ def main(args):
 
 
 if __name__ == "__main__":
+    # quit()
     import argparse
 
     parser = argparse.ArgumentParser()
