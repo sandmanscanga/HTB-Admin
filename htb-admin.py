@@ -1,7 +1,9 @@
 """Module for utilizing the HackTheBox API for machine management"""
+import json
 import os
 import sys
 import time
+from copy import deepcopy
 
 import tabulate
 from hackthebox import HTBClient
@@ -92,7 +94,7 @@ class Client:
             return machine_name, message
 
     def target(self):
-        """Gets the currently active machine's IP address"""
+        """Gets the currently active machine"s IP address"""
 
         machine = self.client.get_active_machine()
         if machine:
@@ -125,7 +127,85 @@ class Client:
         return token
 
 
+def get_machine_server_json(machine_server):
+    json_dict = {
+        "id": machine_server.id,
+        "friendly_name": machine_server.friendly_name,
+        "current_clients": machine_server.current_clients,
+        "location": machine_server.location
+    }
+    return json_dict
+
+
+def get_difficulty_json(difficulty):
+    json_dict = {
+        "Cake": difficulty["counterCake"],
+        "VeryEasy": difficulty["counterVeryEasy"],
+        "Easy": difficulty["counterEasy"],
+        "TooEasy": difficulty["counterTooEasy"],
+        "Medium": difficulty["counterMedium"],
+        "BitHard": difficulty["counterBitHard"],
+        "Hard": difficulty["counterHard"],
+        "TooHard": difficulty["counterTooHard"],
+        "ExHard": difficulty["counterExHard"],
+        "BrainFuck": difficulty["counterBrainFuck"]
+    }
+    return json_dict
+
+
+def get_machine_blood_json(machine_blood):
+    json_dict = {
+        "id": machine_blood.id,
+        "blood": machine_blood.blood,
+        "date": str(machine_blood.date),
+        "name": machine_blood.name,
+        "type": machine_blood.type
+    }
+    return json_dict
+
+
+def get_machine_machine_json(machine_machine):
+    json_dict = {
+        "id": machine_machine.id,
+        "name": machine_machine.name,
+        "os": machine_machine.os,
+        "points": machine_machine.points,
+        "release_date": str(machine_machine.release_date),
+        "user_owns": machine_machine.user_owns,
+        "root_owns": machine_machine.root_owns,
+        "user_owned": machine_machine.user_owned,
+        "root_owned": machine_machine.root_owned,
+        "reviewed": machine_machine.reviewed,
+        "stars": machine_machine.stars,
+        "avatar": machine_machine.avatar,
+        "difficulty": machine_machine.difficulty,
+        "free": machine_machine.free,
+        "author_ids": machine_machine._author_ids,
+        "active": machine_machine.active,
+        "retired": machine_machine.retired,
+        "user_own_time": str(machine_machine.user_own_time),
+        "root_own_time": str(machine_machine.root_own_time),
+        "difficulty_ratings": get_difficulty_json(machine_machine.difficulty_ratings),
+        "user_blood": get_machine_blood_json(machine.machine.user_blood),
+        "root_blood": get_machine_blood_json(machine.machine.root_blood)
+    }
+    return json_dict
+
+
+def get_machine_json(machine):
+    json_dict = {
+        "ip": machine.ip,
+        "server": get_machine_server_json(machine.server),
+        "machine": get_machine_machine_json(machine.machine)
+    }
+    print(json.dumps(json_dict, indent=2))
+
+
 def main(args):
+    if os.getuid() != 0:
+        print("[!] Must be run as an administrator")
+        sys.exit(1)
+
     client = Client(args.token_path)
     if args.query:
         if args.id:
@@ -253,13 +333,72 @@ def main(args):
             print("The machine is currently busy with another operation")
         else:
             if machine is not None:
-                output = [
-                    ["Difficulty", machine.machine.difficulty],
-                    ["Name", machine.machine.name],
-                    ["ID", machine.machine.id],
-                    ["IP", machine.machine.ip]
-                ]
-                print(tabulate.tabulate(output, tablefmt="psql"))
+                if args.json is True:
+                    json_dict = {
+                        "ip": machine.ip,
+                        "server": {
+                            "id": machine.server.id,
+                            "friendly_name": machine.server.friendly_name,
+                            "current_clients": machine.server.current_clients,
+                            "location": machine.server.location
+                        },
+                        "machine": {
+                            "id": machine.machine.id,
+                            "name": machine.machine.name,
+                            "os": machine.machine.os,
+                            "points": machine.machine.points,
+                            "release_date": str(machine.machine.release_date),
+                            "user_owns": machine.machine.user_owns,
+                            "root_owns": machine.machine.root_owns,
+                            "user_owned": machine.machine.user_owned,
+                            "root_owned": machine.machine.root_owned,
+                            "reviewed": machine.machine.reviewed,
+                            "stars": machine.machine.stars,
+                            "avatar": machine.machine.avatar,
+                            "difficulty": machine.machine.difficulty,
+                            "free": machine.machine.free,
+                            "author_ids": machine.machine._author_ids,
+                            "active": machine.machine.active,
+                            "retired": machine.machine.retired,
+                            "user_own_time": str(machine.machine.user_own_time),
+                            "root_own_time": str(machine.machine.root_own_time),
+                            "difficulty_ratings": {
+                                "Cake": machine.machine.difficulty_ratings["counterCake"],
+                                "VeryEasy": machine.machine.difficulty_ratings["counterVeryEasy"],
+                                "Easy": machine.machine.difficulty_ratings["counterEasy"],
+                                "TooEasy": machine.machine.difficulty_ratings["counterTooEasy"],
+                                "Medium": machine.machine.difficulty_ratings["counterMedium"],
+                                "BitHard": machine.machine.difficulty_ratings["counterBitHard"],
+                                "Hard": machine.machine.difficulty_ratings["counterHard"],
+                                "TooHard": machine.machine.difficulty_ratings["counterTooHard"],
+                                "ExHard": machine.machine.difficulty_ratings["counterExHard"],
+                                "BrainFuck": machine.machine.difficulty_ratings["counterBrainFuck"]
+                            },
+                            "user_blood": {
+                                "id": machine.machine.user_blood.id,
+                                "blood": machine.machine.user_blood.blood,
+                                "date": str(machine.machine.user_blood.date),
+                                "name": machine.machine.user_blood.name,
+                                "type": machine.machine.user_blood.type
+                            },
+                            "root_blood": {
+                                "date": str(machine.machine.root_blood.date),
+                                "blood": machine.machine.root_blood.blood,
+                                "id": machine.machine.root_blood.id,
+                                "name": machine.machine.root_blood.name,
+                                "type": machine.machine.root_blood.type
+                            }
+                        }
+                    }
+                    print(json.dumps(json_dict, indent=2))
+                else:
+                    output = [
+                        ["Difficulty", machine.machine.difficulty],
+                        ["Name", machine.machine.name],
+                        ["ID", machine.machine.id],
+                        ["IP", machine.machine.ip]
+                    ]
+                    print(tabulate.tabulate(output, tablefmt="psql"))
             else:
                 print("No active machine available")
     elif args.kill:
@@ -362,7 +501,6 @@ def main(args):
 
 
 if __name__ == "__main__":
-    # quit()
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -382,6 +520,13 @@ if __name__ == "__main__":
         "--active",
         action="store_false",
         help="specify active flag if looking for active machines"
+    )
+    parser.add_argument(
+        "-j"
+        "--json",
+        dest="json",
+        action="store_true",
+        help="specify json flag if looking for JSON output"
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(

@@ -49,15 +49,7 @@ cp $CURRENT_REQUIREMENTS $PROJECT_PATH &&
 rm -f $RUNNER_PATH
 echo '#!/bin/bash' > $RUNNER_PATH
 echo "$VENV_PYTHON $PROJECT_ENTRY \$@" >> $RUNNER_PATH
-
-# Lock down the project permissions and ownership
-echo "[*] Locking down the project permissions and ownership" &&
-chown -R root:root $PROJECT_PATH &&
-chmod 700 $VENV_PATH &&
-chmod 700 $PROJECT_PATH &&
-chmod 600 $PROJECT_ENTRY &&
-chown root:root $RUNNER_PATH &&
-chmod 700 $RUNNER_PATH
+chmod 755 $RUNNER_PATH
 
 # Activate the Python virtual environment and install dependencies
 echo "[*] Activating the Python virtual environment and installing dependencies" &&
